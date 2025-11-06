@@ -19,7 +19,8 @@ $:
           script: npm run build
 
   push:
-    - stages:
+    sync_to_github:
+      stages:
         - name: sync to github
           image: tencentcom/git-sync
           imports:
@@ -30,6 +31,7 @@ $:
             username: ${GIT_USERNAME}
             password: ${GIT_ACCESS_TOKEN}
             git_email: "root@arsrna.cn"
+            force: true
 
   # tag push 时触发
   tag_push:

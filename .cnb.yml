@@ -32,7 +32,14 @@ $:
     #         password: ${GIT_ACCESS_TOKEN}
     #         git_email: "root@arsrna.cn"
     coverage_test:
+      docker:
+        image: node:24
+        volumes:
+          - /root/.bun/install/cache
+          - /root/.npm
       stages:
+        - name: bun
+          script: npm i -g bun
         - name: 测试覆盖率
           script: bun test
         - name: coverage
@@ -44,7 +51,6 @@ $:
             diff_pct: DIFF_LINES
         - name: result
           script: echo echo "LINES $LINES DIFF_LINES $DIFF_LINES"
-          
 
   # tag push 时触发
   tag_push:

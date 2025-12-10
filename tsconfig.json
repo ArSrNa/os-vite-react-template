@@ -16,7 +16,8 @@
   "rootDir": "./",
   "include": [
     "./packages/**/*",
-    "./example/**/*"
+    "./example/**/*",
+    "__tests__/Component.test.tsx"
   ],
   "exclude": [
     "**/*.scss",

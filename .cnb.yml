@@ -4,46 +4,62 @@ $:
         - vscode
         - docker
       docker:
-        image: docker.cnb.cool/arsrna/dev-env/node22:latest
+        image: docker.cnb.cool/arsrna/dev-image/nodejs
         volumes:
+          - /root/.bun/install/cache
           - /root/.npm
-          - /root/.pnpm-store
       imports:
         - https://cnb.cool/arsrna/env/-/blob/main/npm.yml
       runner:
         cpus: 16
       stages:
         - name: 安装依赖
-          script: pnpm install
+          script: bun i
         - name: 构建
-          script: npm run build
+          script: bun run build
 
   push:
-    sync_to_github:
+    # sync_to_github:
+    #   stages:
+    #     - name: sync to github
+    #       image: tencentcom/git-sync
+    #       imports:
+    #         - https://cnb.cool/arsrna/env/-/blob/main/git.yaml
+    #       settings:
+    #         target_url: https://github.com/ArSrNa/os-vite-react-template.git
+    #         auth_type: https
+    #         username: ${GIT_USERNAME}
+    #         password: ${GIT_ACCESS_TOKEN}
+    #         git_email: "root@arsrna.cn"
+    coverage_test:
       stages:
-        - name: sync to github
-          image: tencentcom/git-sync
-          imports:
-            - https://cnb.cool/arsrna/env/-/blob/main/git.yaml
-          settings:
-            target_url: https://github.com/ArSrNa/os-vite-react-template.git
-            auth_type: https
-            username: ${GIT_USERNAME}
-            password: ${GIT_ACCESS_TOKEN}
-            git_email: "root@arsrna.cn"
-            force: true
+        - name: 测试覆盖率
+          script: bun test
+        - name: coverage
+          type: testing:coverage
+          options:
+            diffLines: 78 # 增量覆盖率红线
+          exports:
+            lines: LINES
+            diff_pct: DIFF_LINES
+        - name: result
+          script: echo echo "LINES $LINES DIFF_LINES $DIFF_LINES"
+          
 
   # tag push 时触发
   tag_push:
     - docker:
         image: docker.cnb.cool/arsrna/dev-env/node22:latest
+        volumes:
+          - /root/.bun/install/cache
+          - /root/.npm
       runner:
         cpus: 16
       stages:
         - name: 构建部署
           script:
-            - pnpm i
-            - npm run build
+            - bun i
+            - bun run build
             - echo $CNB_BRANCH
         - name: update version
           # 修改 package.json 中的version为当前tag，但不会提交代码
@@ -59,5 +75,5 @@ $:
             token: $CNB_TOKEN
             email: $CNB_COMMITTER_EMAIL
             registry: https://npm.cnb.cool/arsrna/os-npm/-/packages/
-            folder: ./
+            folder: ./dist
             fail_on_version_conflict: false
